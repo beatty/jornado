@@ -1,23 +1,23 @@
 package jornado;
 
 public class StringBody implements Body {
-    private final String body;
-    private final MediaType mediaType;
+  private final String string;
+  private final MediaType mediaType;
 
-    public Class getRenderServiceClass() {
-        return StringRenderService.class;
-    }
+  public Class<StringRenderService> getRenderServiceClass() {
+    return StringRenderService.class;
+  }
 
-    public StringBody(String body, MediaType mediaType) {
-        this.body = body;
-        this.mediaType = mediaType;
-    }
+  public StringBody(String string, MediaType mediaType) {
+    this.string = string;
+    this.mediaType = mediaType;
+  }
 
-    public String getBody() {
-        return body;
-    }
+  public String getString() {
+    return string;
+  }
 
-    public MediaType getMediaType() {
-        return mediaType;
-    }
+  public MediaType getMediaType() {
+    return mediaType;
+  }
 }

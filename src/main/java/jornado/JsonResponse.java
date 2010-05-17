@@ -33,7 +33,7 @@ public class JsonResponse implements Response {
             return object;
         }
 
-        public Class getRenderServiceClass() {
+        public Class<JsonRenderService> getRenderServiceClass() {
             return JsonRenderService.class;
         }
 

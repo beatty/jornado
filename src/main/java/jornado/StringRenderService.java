@@ -1,10 +1,12 @@
 package jornado;
 
-import com.google.common.base.Charsets;
+import java.io.IOException;
+import java.io.Writer;
 
-public class StringRenderService extends AbstractBufferingRenderService {
-    @Override
-    public byte[] renderFully(Body body) {
-        return ((StringBody) body).getBody().getBytes(Charsets.UTF_8);
-    }
+public class StringRenderService implements RenderService {
+  @Override
+  public void write(Writer writer, Body body) throws IOException {
+    StringBody newBody = (StringBody) body;
+    writer.write(newBody.getString());
+  }
 }

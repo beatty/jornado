@@ -81,19 +81,8 @@ public class JornadoServlet<R extends Request, U extends WebUser> extends HttpSe
             final Body body = response.getBody();
             if (body != null) {
                 RenderService renderService = injector.getInstance(body.getRenderServiceClass());
-
-                if (!renderService.isIncremental()) {
-                    byte[] buffer = renderService.renderFully(body);
-                    httpServletResponse.setContentType(body.getMediaType().toString());
-                    httpServletResponse.setContentLength(buffer.length);
-                    httpServletResponse.getOutputStream().write(buffer);
-                } else {
-                    httpServletResponse.setContentType(body.getMediaType().toString());
-                    Iterable<byte[]> chunks = renderService.render(body);
-                    for (byte[] chunk : chunks) {
-                        httpServletResponse.getOutputStream().write(chunk);
-                    }
-                }
+                httpServletResponse.setContentType(body.getMediaType().toString());
+                renderService.write(httpServletResponse.getWriter(), body);
             }
 
             if (config.isDebug()) {

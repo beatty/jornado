@@ -1,6 +1,6 @@
 package jornado;
 
 public interface Body {
-    Class<RenderService> getRenderServiceClass();
+    Class<? extends RenderService> getRenderServiceClass();
     MediaType getMediaType();
 }
