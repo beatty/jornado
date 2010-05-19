@@ -3,8 +3,6 @@ package jornado;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import java.util.List;
-
 /**
  * Resolves request to route handlers + associated data
  */
