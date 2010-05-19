@@ -9,8 +9,25 @@ import jornado.*;
 public class DemoApp {
   // declare app-specific types we're going to use -- normally we'd add extra stuff here
   static interface DemoUser extends jornado.WebUser {}
-  static interface DemoRequest extends jornado.Request<DemoUser> {}
   static interface DemoHandler extends jornado.Handler<DemoRequest> {}
+
+  // applications can define their own request classes like so
+  static class DemoRequest extends RequestWrapper<DemoUser> {
+    public DemoRequest(Request<DemoUser> delegate) {
+      super(delegate);
+    }
+
+    public String getBrowserIdCookie() {
+      return getCookieValue("b");
+    }
+  }
+
+  static class DemoRequestFactory implements RequestFactory<DemoUser, DemoRequest> {
+    @Override
+    public DemoRequest createRequest(Request<DemoUser> delegate) {
+      return new DemoRequest(delegate);
+    }
+  }
 
   /**
    * Our guice module
@@ -24,6 +41,7 @@ public class DemoApp {
     protected void configure() {
       super.configure();
       bind(UserService.class).to(DemoUserService.class);
+      bind(RequestFactory.class).to(DemoRequestFactory.class);
     }
   }
 

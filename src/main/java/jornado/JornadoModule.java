@@ -11,48 +11,52 @@ import java.util.Collections;
  * A guice module that contains the configuration for jornado
  */
 public abstract class JornadoModule<R extends Request> extends AbstractModule {
-    private final Config config;
-    private final Iterable<RouteHandler<R>> routes;
+  private final Config config;
+  private final Iterable<RouteHandler<R>> routes;
 
-    protected JornadoModule(final Config config, Iterable<RouteHandler<R>> routes) {
-        this.config = config;
-        this.routes = routes;
-    }
+  protected JornadoModule(final Config config, Iterable<RouteHandler<R>> routes) {
+    this.config = config;
+    this.routes = routes;
+  }
 
-    /**
-     * @deprecated use version where you pass in routes instead
-     */
-    @Deprecated
-    protected JornadoModule(final Config config) {
-        this.config = config;
-        routes = createRoutes();
-    }
+  protected Class getRequestClass() {
+    return Request.class;
+  }
 
-    /**
-     * @deprecated pass in on constructor instead
-     * @return routes
-     */
-    @Deprecated
-    protected Iterable<RouteHandler<R>> createRoutes() {
-      return Collections.emptyList();
-    }
+  /**
+   * @deprecated use version where you pass in routes instead
+   */
+  @Deprecated
+  protected JornadoModule(final Config config) {
+    this.config = config;
+    routes = createRoutes();
+  }
 
-    @Override
-    protected void configure() {
-        bind(Config.class).toInstance(config);
-        bindIterable("routes", routes);
+  /**
+   * @return routes
+   * @deprecated pass in on constructor instead
+   */
+  @Deprecated
+  protected Iterable<RouteHandler<R>> createRoutes() {
+    return Collections.emptyList();
+  }
 
-        // inject-enable the handlers
-        Matchers.subclassesOf(Handler.class); 
+  @Override
+  protected void configure() {
+    bind(Config.class).toInstance(config);
+    bindIterable("routes", routes);
 
-        // set up the timing intercepters
-        final TimingInterceptor timingInterceptor = new TimingInterceptor();
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(Timed.class), timingInterceptor);
-        bindInterceptor(Matchers.annotatedWith(Timed.class), Matchers.any(), timingInterceptor);
-        bindInterceptor(Matchers.subclassesOf(Handler.class), Matchers.any(), timingInterceptor);
-    }
+    // inject-enable the handlers
+    Matchers.subclassesOf(Handler.class);
 
-    protected void bindIterable(String name, Iterable value) {
-        bind(TypeLiteral.get(Iterable.class)).annotatedWith(Names.named(name)).toInstance(value);
-    }
+    // set up the timing intercepters
+    final TimingInterceptor timingInterceptor = new TimingInterceptor();
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Timed.class), timingInterceptor);
+    bindInterceptor(Matchers.annotatedWith(Timed.class), Matchers.any(), timingInterceptor);
+    bindInterceptor(Matchers.subclassesOf(Handler.class), Matchers.any(), timingInterceptor);
+  }
+
+  protected void bindIterable(String name, Iterable<RouteHandler<R>> value) {
+    bind(TypeLiteral.get(Iterable.class)).annotatedWith(Names.named(name)).toInstance(value);
+  }
 }
