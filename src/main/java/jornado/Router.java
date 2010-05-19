@@ -13,7 +13,7 @@ public class Router<R extends Request> {
 
     @Inject
     @SuppressWarnings("unchecked")
-    public Router(@Named("routes") Iterable<RouteHandler<R>> routeHandlers) {
+    public Router(@Named("routes") Iterable routeHandlers) {
         this.routeHandlers = routeHandlers;
     }
 
