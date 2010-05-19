@@ -1,5 +1,5 @@
 package jornado;
 
-public interface Handler<T extends Request> {
-    Response handle(T request);
+public interface Handler<R extends Request> {
+    Response handle(R request);
 }

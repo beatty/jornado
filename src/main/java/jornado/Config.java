@@ -1,6 +1,7 @@
 package jornado;
 
 import org.joptparse.Option;
+import org.joptparse.OptionParser;
 
 public class Config {
     @Option(names={"-x"})
@@ -36,5 +37,12 @@ public class Config {
 
     public String getStaticDir() {
         return staticDir;
+    }
+
+    public static Config create(String[] args) {
+      final Config config = new Config();
+      final OptionParser parser = new OptionParser(config);
+      parser.parse(args);
+      return config;
     }
 }
