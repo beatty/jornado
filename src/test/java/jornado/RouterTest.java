@@ -167,5 +167,10 @@ public class RouterTest {
     public String getRequestId() {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public boolean isLoginCookieInvalid() {
+      return false; // TODO
+    }
   }
 }
