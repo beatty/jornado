@@ -20,15 +20,17 @@ import java.io.PrintWriter;
 public class JornadoServlet<R extends Request<U>, U extends WebUser> extends HttpServlet {
   private final Router<R> router;
   private final UserService<U> userService;
+  private final SecureCookieService secureCookieService;
   private final RequestFactory<U, R> requestFactory;
   private final Config config;
   private final Injector injector;
 
   @Inject
   @SuppressWarnings("unchecked")
-  public JornadoServlet(Router router, UserService userService, RequestFactory requestFactory, Config config, Injector injector) {
+  public JornadoServlet(Router router, UserService userService, SecureCookieService secureCookieService, RequestFactory requestFactory, Config config, Injector injector) {
     this.router = router;
     this.userService = userService;
+    this.secureCookieService = secureCookieService;
     this.requestFactory = requestFactory;
     this.config = config;
     this.injector = injector;
@@ -38,7 +40,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   protected void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
     RequestProfile.clear();
 
-    final ServletBackedRequest<U> servletBackedRequest = new ServletBackedRequest<U>(httpServletRequest, userService);
+    final ServletBackedRequest<U> servletBackedRequest = new ServletBackedRequest<U>(httpServletRequest, userService, secureCookieService);
     final R request = requestFactory.createRequest(servletBackedRequest);
 
     final RouteHandlerData<R> routeHandlerData = router.route(request);
@@ -48,22 +50,17 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
       final boolean requiresUser = routeHandlerData.getHandlerClass().getAnnotation(RequiresLogin.class) != null;
 
       Response response = null;
-      boolean clearLoginCookie = false;
 
       if (requiresUser && !request.isLoggedIn()) {
         response = new RedirectResponse("/login?target=" + request.getReconstructedUrl());
       } else {
         servletBackedRequest.setRouteHandlerData(routeHandlerData);
-        try {
-          final Class<? extends Handler<R>> handlerClass = routeHandlerData.getHandlerClass();
-          final Handler<R> handler = injector.getInstance(handlerClass);
-          response = handler.handle(request);
-        } catch (InvalidIdException invalidIdException) {
-          clearLoginCookie = true;
-        }
+        final Class<? extends Handler<R>> handlerClass = routeHandlerData.getHandlerClass();
+        final Handler<R> handler = injector.getInstance(handlerClass);
+        response = handler.handle(request);
       }
 
-      respond(httpServletResponse, request, response, clearLoginCookie);
+      respond(httpServletResponse, request, response);
 
       if (config.isDebug()) {
         RequestProfile.finish();
@@ -77,7 +74,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
     }
   }
 
-  private void respond(HttpServletResponse servletResponse, R request, Response response, boolean clearLoginCookie) throws IOException {
+  private void respond(HttpServletResponse servletResponse, R request, Response response) throws IOException {
     final int statusCode = response.getStatus().getCode();
     final String reasonPhrase = response.getStatus().getReasonPhrase();
     if (reasonPhrase == null) {
@@ -90,7 +87,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
       op.execute(servletResponse);
     }
 
-    if (clearLoginCookie) {
+    if (request.isLoginCookieInvalid()) {
       final Cookie cookie = request.getCookie(Constants.LOGIN_COOKIE);
       if (cookie != null) {
         cookie.setMaxAge(0);

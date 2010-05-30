@@ -6,6 +6,9 @@ import javax.servlet.http.HttpSession;
 /**
  * The request. Subset/superset of HttpServletRequest with crap removed and some extra features, like
  * support for users.
+ *
+ * The
+ *
  * @param <U>
  */
 public interface Request<U extends WebUser> {
@@ -30,4 +33,5 @@ public interface Request<U extends WebUser> {
     boolean isLoggedIn();
     String getXsrfCookie();
     String getRequestId();
+    boolean isLoginCookieInvalid();  
 }
