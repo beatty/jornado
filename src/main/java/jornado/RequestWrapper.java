@@ -97,4 +97,9 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
   public String getRequestId() {
     return delegate.getRequestId();
   }
+
+  @Override
+  public boolean isLoginCookieInvalid() {
+    return delegate.isLoginCookieInvalid();
+  }
 }
