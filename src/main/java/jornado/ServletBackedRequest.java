@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   private static final Random rnd = new Random();
-  private static final int TIMEOUT_31_DAYS = 3600 * 31;
+  private static final int TIMEOUT_31_DAYS = 3600 * 31; // TODO: make configurable
 
   private final HttpServletRequest servletRequest;
   private final UserService<U> userService;
@@ -141,7 +141,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
 
   public boolean isLoginCookieInvalid() {
     return loginCookieInvalid.get();
-  }  
+  }
 
   public U getUser() {
     if (cachedUser == null) {
@@ -149,7 +149,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
       U user = null;
       if (loginCookie != null) {
         try {
-        final String userId = secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
+          final String userId = secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
           user = userService.load(userId);
           if (user == null) {
             loginCookieInvalid.set(true);

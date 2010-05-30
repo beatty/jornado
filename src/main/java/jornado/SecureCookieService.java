@@ -1,6 +1,8 @@
 package jornado;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.apache.commons.codec.binary.Base64;
 
 import java.security.InvalidKeyException;
@@ -24,7 +26,8 @@ public class SecureCookieService {
 
   private final SecretKeySpec signingKey;
 
-  public SecureCookieService(String key) {
+  @Inject
+  public SecureCookieService(@Named("cookieKey") String key) {
     signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
   }
 

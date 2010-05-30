@@ -3,12 +3,25 @@ package demo;
 import com.google.inject.*;
 import jornado.*;
 
+import javax.servlet.http.Cookie;
+
 /**
  * Sample app
  */
 public class DemoApp {
   // declare app-specific types we're going to use -- normally we'd add extra stuff here
-  static interface DemoUser extends jornado.WebUser {}
+  static class DemoUser implements WebUser {
+    private final String id;
+
+    DemoUser(String id) {
+      this.id = id;
+    }
+
+    @Override
+    public String getWebId() {
+      return id;
+    }
+  }
   static interface DemoHandler extends jornado.Handler<DemoRequest> {}
 
   // applications can define their own request classes like so
@@ -52,6 +65,8 @@ public class DemoApp {
     // specify routes
     final Iterable<RouteHandler<DemoRequest>> routes = RouteHandler.iterable(
       new FixedRoute(Method.GET, "/"), HomeHandler.class,
+      new FixedRoute(Method.GET, "/login"), LoginHandler.class,
+      new FixedRoute(Method.GET, "/logout"), LogoutHandler.class,
       new RegexRoute(Method.GET, "/person/([A-Za-z0-9]+)", "name"), PersonHandler.class);
 
     // create guice module
@@ -67,7 +82,14 @@ public class DemoApp {
   @Singleton
   static class HomeHandler implements DemoHandler {
     public Response handle(DemoRequest request) {
-      return new OkPlainTextResponse("hello, world");
+      DemoUser user = request.getUser();
+      final String greeting;
+      if (user != null) {
+        greeting = user.getWebId();
+      } else {
+        greeting = "world";
+      }
+      return new OkPlainTextResponse("hello, " + greeting);
     }
   }
 
@@ -78,9 +100,46 @@ public class DemoApp {
     }
   }
 
+  /**
+   * sets the login cookie to whatever the 'username' param is. and redirect to the 'target' url param.
+   */
+  static class LoginHandler implements DemoHandler {
+    private final SecureCookieService secureCookieService;
+
+    @Inject
+    LoginHandler(SecureCookieService secureCookieService) {
+      this.secureCookieService = secureCookieService;
+    }
+
+    @Override
+    public Response handle(DemoRequest request) {
+      final RedirectResponse response = new RedirectResponse(request.getParameter("target", "/"));
+      final String userId = request.getParameter("username", "john");
+      response.addHeaderOp(new SetUserCookieHeaderOp(secureCookieService.create(userId)));
+      
+      return response;
+    }
+  }
+
+  static class LogoutHandler implements DemoHandler {
+    @Override
+    public Response handle(DemoRequest request) {
+
+      final RedirectResponse response = new RedirectResponse("/");
+      final Cookie l = request.getCookie(Constants.LOGIN_COOKIE); // TODO: jornado should have a better facility for clearing login cookie
+
+      if (l != null) {
+        response.addHeaderOp(new ClearCookieOp(l));
+      }
+
+      return response;
+    }
+  }
+
   static class DemoUserService implements UserService<DemoUser> {
     public DemoUser load(String id) {
-      throw new UnsupportedOperationException();
+      // pretend we have a database
+      return new DemoUser(id);
     }
   }
 }

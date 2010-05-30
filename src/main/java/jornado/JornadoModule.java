@@ -46,8 +46,12 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     bind(Config.class).toInstance(config);
     bindIterable("routes", routes);
 
+    bind(TypeLiteral.get(String.class)).annotatedWith(Names.named("cookieKey")).toInstance(config.getCookieKey());
+
     // inject-enable the handlers
     Matchers.subclassesOf(Handler.class);
+
+    bind(SecureCookieService.class);
 
     // set up the timing intercepters
     final TimingInterceptor timingInterceptor = new TimingInterceptor();
