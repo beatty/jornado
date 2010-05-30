@@ -134,7 +134,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
 
     public U getUser() {
         if (cachedUser == null) {
-            String uCookie = getCookieValue("u");
+            String uCookie = getCookieValue(Constants.USER_COOKIE);
             final U user;
             if (uCookie != null) {
                 // TODO: consider handling this exception somehow

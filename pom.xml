@@ -74,6 +74,13 @@
       <version>2.0.1</version>
     </dependency>
 
+    <!-- Commons Codec -->
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.4</version>
+    </dependency>
+
     <!-- JoptParse -->
     <dependency>
       <groupId>org.joptparse</groupId>
