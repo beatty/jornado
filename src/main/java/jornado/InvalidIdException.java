@@ -1,7 +1,7 @@
 package jornado;
 
 /**
- * The given Id was invalid and the cookie should be cleared
+ * The given Id was invalid and the login cookie should be cleared
  */
 public class InvalidIdException extends RuntimeException {
     public InvalidIdException() {

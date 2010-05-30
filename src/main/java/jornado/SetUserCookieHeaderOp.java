@@ -11,7 +11,7 @@ public class SetUserCookieHeaderOp implements HeaderOp {
     }
 
     public void execute(HttpServletResponse response) {
-        final Cookie ucookie = new Cookie(Constants.USER_COOKIE, userId);
+        final Cookie ucookie = new Cookie(Constants.LOGIN_COOKIE, userId);
         ucookie.setPath("/");
         // TODO: expires, domain, etc.
         response.addCookie(ucookie);

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import javax.servlet.*;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,7 +48,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
       final boolean requiresUser = routeHandlerData.getHandlerClass().getAnnotation(RequiresLogin.class) != null;
 
       Response response = null;
-      boolean clearUserCookie = false;
+      boolean clearLoginCookie = false;
 
       if (requiresUser && !request.isLoggedIn()) {
         response = new RedirectResponse("/login?target=" + request.getReconstructedUrl());
@@ -58,11 +59,11 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
           final Handler<R> handler = injector.getInstance(handlerClass);
           response = handler.handle(request);
         } catch (InvalidIdException invalidIdException) {
-          clearUserCookie = true;
+          clearLoginCookie = true;
         }
       }
 
-      respond(httpServletResponse, request, response, clearUserCookie);
+      respond(httpServletResponse, request, response, clearLoginCookie);
 
       if (config.isDebug()) {
         RequestProfile.finish();
@@ -76,28 +77,32 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
     }
   }
 
-  private void respond(HttpServletResponse httpServletResponse, R request, Response response, boolean clearUserCookie) throws IOException {
+  private void respond(HttpServletResponse servletResponse, R request, Response response, boolean clearLoginCookie) throws IOException {
     final int statusCode = response.getStatus().getCode();
     final String reasonPhrase = response.getStatus().getReasonPhrase();
     if (reasonPhrase == null) {
-      httpServletResponse.setStatus(statusCode);
+      servletResponse.setStatus(statusCode);
     } else {
-      httpServletResponse.sendError(statusCode, reasonPhrase);
+      servletResponse.sendError(statusCode, reasonPhrase);
     }
 
     for (HeaderOp op : response.getHeaderOps()) {
-      op.execute(httpServletResponse);
+      op.execute(servletResponse);
     }
 
-    if (clearUserCookie) {
-      new ClearCookieOp(request.getCookie(Constants.USER_COOKIE)).execute(httpServletResponse);
+    if (clearLoginCookie) {
+      final Cookie cookie = request.getCookie(Constants.LOGIN_COOKIE);
+      if (cookie != null) {
+        cookie.setMaxAge(0);
+        servletResponse.addCookie(cookie);
+      }
     }
 
     final Body body = response.getBody();
     if (body != null) {
       RenderService renderService = injector.getInstance(body.getRenderServiceClass());
-      httpServletResponse.setContentType(body.getMediaType().toString());
-      renderService.write(httpServletResponse.getWriter(), body);
+      servletResponse.setContentType(body.getMediaType().toString());
+      renderService.write(servletResponse.getWriter(), body);
     }
   }
 }
