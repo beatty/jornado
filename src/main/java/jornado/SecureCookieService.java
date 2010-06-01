@@ -21,14 +21,14 @@ import java.util.Arrays;
  * @author john
  */
 public class SecureCookieService {
-  private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+  private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String VALUE_ENCODING = "UTF-8";
 
   private final SecretKeySpec signingKey;
 
   @Inject
   public SecureCookieService(@Named("cookieKey") String key) {
-    signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
+    signingKey = new SecretKeySpec(key.getBytes(), HMAC_ALGORITHM);
   }
 
   /**
@@ -118,7 +118,7 @@ public class SecureCookieService {
 
   private byte[] sign(byte[]... parts) {
     try {
-      final Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+      final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
       mac.init(signingKey);
       for (byte[] part : parts) {
         mac.update(part);
