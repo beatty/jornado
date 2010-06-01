@@ -9,11 +9,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Implementation of Request using HttpServletRequest
  *
+ * TODO: consider making this threadsafe
+ *
  * @param <U> user type
  */
 public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   private static final Random rnd = new Random();
-  private static final int TIMEOUT_31_DAYS = 3600 * 31; // TODO: make configurable
+  private static final int TIMEOUT_31_DAYS = 3600 * 24 * 31; // TODO: make configurable
 
   private final HttpServletRequest servletRequest;
   private final UserService<U> userService;
