@@ -173,6 +173,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
     return getHeader("Referer");
   }
 
+  // TODO: lighter-weight implementation needed?
   public boolean isLoggedIn() {
     return getUser() != null;
   }

@@ -1,11 +1,13 @@
 package jornado;
 
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * A guice module that contains the configuration for jornado
@@ -46,7 +48,10 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     bind(Config.class).toInstance(config);
     bindIterable("routes", routes);
 
-    bind(TypeLiteral.get(String.class)).annotatedWith(Names.named("cookieKey")).toInstance(config.getCookieKey());
+    bindLiteral("cookieKey", config.getCookieKey());
+    bindLiteral("loginUrl", config.getLoginUrl());
+
+    bind(TypeLiteral.get(List.class)).annotatedWith(Names.named("filters")).toInstance(filters());
 
     // inject-enable the handlers
     Matchers.subclassesOf(Handler.class);
@@ -60,7 +65,15 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     bindInterceptor(Matchers.subclassesOf(Handler.class), Matchers.any(), timingInterceptor);
   }
 
+  protected void bindLiteral(String annotationName, String value) {
+    bind(TypeLiteral.get(String.class)).annotatedWith(Names.named(annotationName)).toInstance(value);
+  }
+
   protected void bindIterable(String name, Iterable<RouteHandler<R>> value) {
     bind(TypeLiteral.get(Iterable.class)).annotatedWith(Names.named(name)).toInstance(value);
+  }
+  
+  protected List<? extends Class> filters() {
+    return Lists.newArrayList(AuthFilter.class);
   }
 }

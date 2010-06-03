@@ -3,6 +3,7 @@ package jornado;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import java.util.List;
 import javax.servlet.*;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import com.google.inject.name.Named;
 
 /**
  * TODO: encrypt user cookie with login date and IP address; validate on the way in
@@ -24,11 +26,13 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   private final RequestFactory<U, R> requestFactory;
   private final Config config;
   private final Injector injector;
+  private final Class<Filter<R>>[] filterClasses;
 
   @Inject
   @SuppressWarnings("unchecked")
-  public JornadoServlet(Router router, UserService userService, SecureCookieService secureCookieService, RequestFactory requestFactory, Config config, Injector injector) {
+  public JornadoServlet(Router router, @Named("filters") List filters, UserService userService, SecureCookieService secureCookieService, RequestFactory requestFactory, Config config, Injector injector) {
     this.router = router;
+    this.filterClasses = (Class<Filter<R>>[]) filters.toArray(new Class[filters.size()]);
     this.userService = userService;
     this.secureCookieService = secureCookieService;
     this.requestFactory = requestFactory;
@@ -46,21 +50,25 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
     final RouteHandlerData<R> routeHandlerData = router.route(request);
 
     if (routeHandlerData != null) {
-      // TODO: all the user related stuff should move to some sort of filter probably
-      final boolean requiresUser = routeHandlerData.getHandlerClass().getAnnotation(RequiresLogin.class) != null;
+      final Class<? extends Handler<R>> handlerClass = routeHandlerData.getHandlerClass();
 
-      Response response = null;
+      servletBackedRequest.setRouteHandlerData(routeHandlerData);
+      final Handler<R> handler = injector.getInstance(handlerClass);
 
-      if (requiresUser && !request.isLoggedIn()) {
-        response = new RedirectResponse("/login?target=" + request.getReconstructedUrl());
-      } else {
-        servletBackedRequest.setRouteHandlerData(routeHandlerData);
-        final Class<? extends Handler<R>> handlerClass = routeHandlerData.getHandlerClass();
-        final Handler<R> handler = injector.getInstance(handlerClass);
-        response = handler.handle(request);
+      Response filterResponse = null;
+
+      int beforeIdx = 0;
+      for (; beforeIdx<filterClasses.length && filterResponse == null; beforeIdx++) {
+        filterResponse = injector.getInstance(filterClasses[beforeIdx]).before(request, handlerClass);
       }
 
-      respond(httpServletResponse, request, response);
+      final Response response = filterResponse != null ? filterResponse : handler.handle(request);
+
+      for (int afterIdx=beforeIdx-1; afterIdx>=0; afterIdx--) {
+        injector.getInstance(filterClasses[afterIdx]).after(request, response, handlerClass);
+      }
+
+      sendResponse(httpServletResponse, request, response);
 
       if (config.isDebug()) {
         RequestProfile.finish();
@@ -74,7 +82,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
     }
   }
 
-  private void respond(HttpServletResponse servletResponse, R request, Response response) throws IOException {
+  private void sendResponse(HttpServletResponse servletResponse, R request, Response response) throws IOException {
     final int statusCode = response.getStatus().getCode();
     final String reasonPhrase = response.getStatus().getReasonPhrase();
     if (reasonPhrase == null) {

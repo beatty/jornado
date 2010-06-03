@@ -1,15 +1,23 @@
 package demo;
 
+import com.google.common.collect.Lists;
 import com.google.inject.*;
 import jornado.*;
 
 import javax.servlet.http.Cookie;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Sample app
  */
 public class DemoApp {
-  // declare app-specific types we're going to use -- normally we'd add extra stuff here
+  private static final String B_COOKIE_NAME = "b";
+  private static final int B_COOKIE_MAX_AGE = 3600 * 24 * 31 * 6;
+
+  //
+  // DEMO: declare app-specific types we're going to use -- normally we'd add extra stuff here
+  //
   static class DemoUser implements WebUser {
     private final String id;
 
@@ -22,16 +30,40 @@ public class DemoApp {
       return id;
     }
   }
-  static interface DemoHandler extends jornado.Handler<DemoRequest> {}
 
-  // applications can define their own request classes like so
+  static interface DemoHandler extends jornado.Handler<DemoRequest> {
+  }
+
+  //
+  // DEMO: applications can define their own request classes like so
+  //
+
   static class DemoRequest extends RequestWrapper<DemoUser> {
+    private String newBCookieValue; // set only in case where the 'b' cookie doesn't pre-exist on the request
+
     public DemoRequest(Request<DemoUser> delegate) {
       super(delegate);
     }
 
-    public String getBrowserIdCookie() {
-      return getCookieValue("b");
+    public void setNewBCookieValue(String newBCookieValue) {
+      this.newBCookieValue = newBCookieValue;
+    }
+
+    /**
+     * @return the browser ID, which is the b-cookie value the browser sent with the request,
+     * or if this request did not contain a b-cookie, the new b-cookie value that will be included
+     * in the response to this request.
+     */
+    public String getBrowserId() {
+      return newBCookieValue != null ? newBCookieValue : getBCookie();
+    }
+
+    public String getBCookie() {
+      return getCookieValue(B_COOKIE_NAME);
+    }
+
+    public String getNewBCookieValue() {
+      return newBCookieValue;
     }
   }
 
@@ -56,6 +88,32 @@ public class DemoApp {
       bind(UserService.class).to(DemoUserService.class);
       bind(RequestFactory.class).to(DemoRequestFactory.class);
     }
+
+    @Override
+    protected List<? extends Class> filters() {
+      return Lists.newArrayList(BCookieFilter.class, AuthFilter.class);
+    }
+  }
+
+  /**
+   * Fixes up the request and response to support a "browser ID", a random string.
+   * Adds the cookie if a new cookie is needed.
+   * TODO: use signed cookies.
+   */
+  static class BCookieFilter implements Filter<DemoRequest> {
+    public Response before(DemoRequest request, Class<? extends Handler<DemoRequest>> handlerClass) {
+      if (request.getBCookie() == null) {
+        request.setNewBCookieValue(Long.toString(new Random().nextLong()));
+      }
+      return null;
+    }
+
+    public void after(DemoRequest request, Response response, Class<? extends Handler<DemoRequest>> handlerClass) {
+      final String newBCookieValue = request.getNewBCookieValue();
+      if (newBCookieValue != null) {
+        response.addHeaderOp(new SetCookieHeaderOp(B_COOKIE_NAME, newBCookieValue, B_COOKIE_MAX_AGE));
+      }
+    }
   }
 
   public static void main(String[] args) throws Exception {
@@ -64,10 +122,12 @@ public class DemoApp {
 
     // specify routes
     final Iterable<RouteHandler<DemoRequest>> routes = RouteHandler.iterable(
-      new FixedRoute(Method.GET, "/"), HomeHandler.class,
-      new FixedRoute(Method.GET, "/login"), LoginHandler.class,
-      new FixedRoute(Method.GET, "/logout"), LogoutHandler.class,
-      new RegexRoute(Method.GET, "/person/([A-Za-z0-9]+)", "name"), PersonHandler.class);
+            new FixedRoute(Method.GET, "/"), HomeHandler.class,
+            new FixedRoute(Method.GET, "/login"), LoginFormHandler.class,
+            new FixedRoute(Method.POST, "/login"), LoginPostHandler.class,
+            new FixedRoute(Method.GET, "/logout"), LogoutHandler.class,
+            new FixedRoute(Method.GET, "/secret"), SecretHandler.class,
+            new RegexRoute(Method.GET, "/person/([A-Za-z0-9]+)", "name"), PersonHandler.class);
 
     // create guice module
     final Module module = new DemoModule(config, routes);
@@ -100,23 +160,31 @@ public class DemoApp {
     }
   }
 
+  static class LoginFormHandler implements DemoHandler {
+
+    @Override
+    public Response handle(DemoRequest request) {
+      return new SimpleResponse(Status.OK, new StringBody("<form method='POST'><h1>Login</h1><input name='username'><input type='submit'/></form>", MediaType.TEXT_HTML_UTF8));
+    }
+  }
+
   /**
    * sets the login cookie to whatever the 'username' param is. and redirect to the 'target' url param.
    */
-  static class LoginHandler implements DemoHandler {
+  static class LoginPostHandler implements DemoHandler {
     private final SecureCookieService secureCookieService;
 
     @Inject
-    LoginHandler(SecureCookieService secureCookieService) {
+    LoginPostHandler(SecureCookieService secureCookieService) {
       this.secureCookieService = secureCookieService;
     }
 
     @Override
     public Response handle(DemoRequest request) {
       final RedirectResponse response = new RedirectResponse(request.getParameter("target", "/"));
-      final String userId = request.getParameter("username", "john");
+      final String userId = request.getParameter("username");
       response.addHeaderOp(new SetUserCookieHeaderOp(secureCookieService.create(userId)));
-      
+
       return response;
     }
   }
@@ -133,6 +201,14 @@ public class DemoApp {
       }
 
       return response;
+    }
+  }
+
+  @RequiresLogin
+  static class SecretHandler implements DemoHandler {
+    @Override
+    public Response handle(DemoRequest request) {
+      return new OkPlainTextResponse("super secret");
     }
   }
 

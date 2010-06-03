@@ -1,24 +1,18 @@
 package jornado;
 
-import java.util.Collections;
-import java.util.List;
+public class ErrorResponse extends AbstractResponse {
+  private final String reasonPhrase;
 
-public class ErrorResponse implements Response {
-    private final String message;
+  public ErrorResponse(String reasonPhrase) {
+    this.reasonPhrase = reasonPhrase;
+  }
 
-    public ErrorResponse(String message) {
-        this.message = message;
-    }
+  public Status getStatus() {
+    return new Status(503, reasonPhrase);
+  }
 
-    public Status getStatus() {
-        return Status.CODE_503;
-    }
-
-    public List<HeaderOp> getHeaderOps() {
-        return Collections.emptyList();
-    }
-
-    public Body getBody() {
-        return new StringBody("oops! " + message, MediaType.TEXT_PLAIN);
-    }
+  public Body getBody() {
+    // TODO
+    return new StringBody("oops! " + reasonPhrase, MediaType.TEXT_PLAIN);
+  }
 }

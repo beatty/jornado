@@ -25,6 +25,9 @@ public class Config {
   @Option(names = {"--cookieKey"}, defarg="32oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=")
   public String cookieKey;
 
+  @Option(names = {"--loginUrl"}, defarg="/login")
+  public String loginUrl;
+
   public int getPort() {
     return port;
   }
@@ -47,6 +50,10 @@ public class Config {
 
   public String getCookieKey() {
     return cookieKey;
+  }
+
+  public String getLoginUrl() {
+    return loginUrl;
   }
 
   public static Config create(String[] args) {
