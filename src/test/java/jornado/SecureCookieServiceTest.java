@@ -27,12 +27,12 @@ public class SecureCookieServiceTest {
     assertEquals(value, value2);
   }
 
-  @Test(expected = FailedSignatureValidation.class)
+  @Test(expected = FailedSignatureValidationException.class)
   public void testChangeKey() {
     svc2.extract(svc.create("foo"), Integer.MAX_VALUE);
   }
 
-  @Test(expected = FailedSignatureValidation.class)
+  @Test(expected = FailedSignatureValidationException.class)
   public void testTamper() {
     final String value = "john";
     final String cookie = svc.create(value);

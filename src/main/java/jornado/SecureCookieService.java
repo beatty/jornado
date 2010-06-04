@@ -49,7 +49,7 @@ public class SecureCookieService {
    * @param timeoutSeconds The maximum allowable age of the cookie, specified in seconds.
    * @return the original value
    * @throws SecureCookieTimeoutException if the cookie timestamp is older then than specified timeout value.
-   * @throws FailedSignatureValidation if the cookie failed signature validation. Note that the application should
+   * @throws FailedSignatureValidationException if the cookie failed signature validation. Note that the application should
    * occasionally expect this when keys are rotated.
    */
   public String extract(String cookie, int timeoutSeconds) {
@@ -69,7 +69,7 @@ public class SecureCookieService {
       if (Arrays.equals(actualSignature, givenSignature)) {
         return utf8String(givenValue);
       } else {
-        throw new FailedSignatureValidation();
+        throw new FailedSignatureValidationException();
       }
     } else {
       throw new SecureCookieTimeoutException();

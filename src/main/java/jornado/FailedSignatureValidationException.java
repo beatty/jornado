@@ -5,5 +5,5 @@ package jornado;
  *
  * @author john
  */
-class FailedSignatureValidation extends RuntimeException {
+public class FailedSignatureValidationException extends RuntimeException {
 }

@@ -158,7 +158,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
           }
         } catch (InvalidSecureCookieFormatException e) {
           loginCookieInvalid.set(true);
-        } catch (FailedSignatureValidation e) {
+        } catch (FailedSignatureValidationException e) {
           loginCookieInvalid.set(true);
         }
       } else {
