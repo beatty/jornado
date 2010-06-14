@@ -13,7 +13,7 @@ public class FixedRoute implements Route {
         this.path = path;
     }
 
-    public RouteData match(Request request) {
+    public RouteData match(Request<? extends WebUser> request) {
         if (method == null || method.equals(request.getMethod())) {
             if (path.equals(request.getPath())) {
                 return new RouteData() {

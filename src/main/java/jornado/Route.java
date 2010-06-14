@@ -1,5 +1,5 @@
 package jornado;
 
 public interface Route {
-    RouteData match(Request request);    
+    RouteData match(Request<? extends WebUser> request);    
 }

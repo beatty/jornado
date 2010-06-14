@@ -24,7 +24,7 @@ public class RegexRoute implements Route {
         this(method, Pattern.compile(pattern), groupNames);
     }
 
-    public RouteData match(Request request) {
+    public RouteData match(Request<? extends WebUser> request) {
         if (method == null || method.equals(request.getMethod())) {
             final Matcher matcher = pattern.matcher(request.getPath());
             if (matcher.matches()) {
