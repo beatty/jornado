@@ -2,16 +2,17 @@ package jornado;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 
-import java.util.List;
-import javax.servlet.*;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import com.google.inject.name.Named;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * TODO: encrypt user cookie with login date and IP address; validate on the way in
@@ -26,13 +27,13 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   private final RequestFactory<U, R> requestFactory;
   private final Config config;
   private final Injector injector;
-  private final Class<Filter<R>>[] filterClasses;
+  private final List<Class<Filter<R>>> filterClasses;
 
   @Inject
   @SuppressWarnings("unchecked")
   public JornadoServlet(Router router, @Named("filters") List filters, UserService userService, SecureCookieService secureCookieService, RequestFactory requestFactory, Config config, Injector injector) {
     this.router = router;
-    this.filterClasses = (Class<Filter<R>>[]) filters.toArray(new Class[filters.size()]);
+    this.filterClasses = filters;
     this.userService = userService;
     this.secureCookieService = secureCookieService;
     this.requestFactory = requestFactory;
@@ -55,20 +56,20 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
       servletBackedRequest.setRouteHandlerData(routeHandlerData);
       final Handler<R> handler = injector.getInstance(handlerClass);
 
-      Response filterResponse = null;
+      Filter.FilterChain<R> chain = new Filter.FilterChain<R>() {
+        Response current;
+        Iterator<Class<Filter<R>>> f = filterClasses.iterator();
+        @Override
+        public Response doFilter(R request) {
+          if (f.hasNext()) {
+            return injector.getInstance(f.next()).filter(request, handlerClass, this);
+          } else {
+            return handler.handle(request);
+          }
+        }
+      };
 
-      int beforeIdx = 0;
-      for (; beforeIdx<filterClasses.length && filterResponse == null; beforeIdx++) {
-        filterResponse = injector.getInstance(filterClasses[beforeIdx]).before(request, handlerClass);
-      }
-
-      final Response response = filterResponse != null ? filterResponse : handler.handle(request);
-
-      for (int afterIdx=beforeIdx-1; afterIdx>=0; afterIdx--) {
-        injector.getInstance(filterClasses[afterIdx]).after(request, response, handlerClass);
-      }
-
-      sendResponse(httpServletResponse, request, response);
+      sendResponse(httpServletResponse, request, chain.doFilter(request));
 
       if (config.isDebug()) {
         RequestProfile.finish();
