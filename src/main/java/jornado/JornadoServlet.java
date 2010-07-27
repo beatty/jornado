@@ -43,6 +43,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
 
   @Override
   protected void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+    httpServletResponse.setHeader("Server", "Jornado+Jetty");
     RequestProfile.clear();
 
     final ServletBackedRequest<U> servletBackedRequest = new ServletBackedRequest<U>(httpServletRequest, userService, secureCookieService);
