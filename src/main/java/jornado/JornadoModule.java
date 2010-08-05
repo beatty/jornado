@@ -21,24 +21,16 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     this.routes = routes;
   }
 
+  // TODO: I was thinking this would be useful for something... not sure what.
   protected Class getRequestClass() {
     return Request.class;
   }
 
-  /**
-   * @deprecated use version where you pass in routes instead
-   */
-  @Deprecated
   protected JornadoModule(final Config config) {
     this.config = config;
     routes = createRoutes();
   }
 
-  /**
-   * @return routes
-   * @deprecated pass in on constructor instead
-   */
-  @Deprecated
   protected Iterable<RouteHandler<R>> createRoutes() {
     return Collections.emptyList();
   }
