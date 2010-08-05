@@ -4,15 +4,34 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegexRoute implements Route {
-    private final Method method;
+    private final Method[] methods;
     private final Pattern pattern;
     private final String[] groupNames;
 
+    public RegexRoute(Pattern pattern, String[] groupNames) {
+      if (pattern == null) throw new IllegalArgumentException();
+      
+      this.methods = null;
+      this.pattern = pattern;
+      this.groupNames = groupNames;
+  }
+
     public RegexRoute(Method method, Pattern pattern, String[] groupNames) {
-        this.method = method;
+        if (method == null) throw new IllegalArgumentException();
+        if (pattern == null) throw new IllegalArgumentException();
+        
+        this.methods = new Method[]{method};
         this.pattern = pattern;
         this.groupNames = groupNames;
     }
+
+    public RegexRoute(Method[] methods, Pattern pattern, String[] groupNames) {
+      if (pattern == null) throw new IllegalArgumentException();
+
+      this.methods = methods;
+      this.pattern = pattern;
+      this.groupNames = groupNames;
+  }
 
     /**
      * Convenience constructor
@@ -24,14 +43,36 @@ public class RegexRoute implements Route {
         this(method, Pattern.compile(pattern), groupNames);
     }
 
+    /**
+     * Convenience constructor
+     * @param method
+     * @param pattern
+     * @param groupNames
+     */
+    public RegexRoute(Method[] methods, String pattern, String... groupNames) {
+        this(methods, Pattern.compile(pattern), groupNames);
+    }
+
     public RouteData match(Request<? extends WebUser> request) {
-        if (method == null || method.equals(request.getMethod())) {
+        if (methodMatches(request.getMethod())) {
             final Matcher matcher = pattern.matcher(request.getPath());
             if (matcher.matches()) {
                 return new RegexRouteMatch(matcher, groupNames);
             }
         }
         return null;
+    }
+    
+    protected boolean methodMatches(Method requestMethod) {
+      if (methods == null) return true;
+      
+      for (Method routeMethod : methods) {
+        if (routeMethod.equals(requestMethod)) {
+          return true;
+        }
+      }
+      
+      return false;
     }
 
     static class RegexRouteMatch implements RouteData {

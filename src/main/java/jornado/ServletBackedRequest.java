@@ -51,7 +51,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   }
 
   public String getPath() {
-    return servletRequest.getServletPath();
+    return servletRequest.getRequestURI();
   }
 
   public String getReconstructedUrl() {

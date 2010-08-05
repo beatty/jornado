@@ -69,7 +69,7 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     bind(TypeLiteral.get(String.class)).annotatedWith(Names.named(annotationName)).toInstance(value);
   }
 
-  protected void bindIterable(String name, Iterable<RouteHandler<R>> value) {
+  protected void bindIterable(String name, Iterable<?> value) {
     bind(TypeLiteral.get(Iterable.class)).annotatedWith(Names.named(name)).toInstance(value);
   }
   
