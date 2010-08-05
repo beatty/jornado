@@ -109,10 +109,16 @@ public class DemoApp {
     }
 
     public void after(DemoRequest request, Response response, Class<? extends Handler<DemoRequest>> handlerClass) {
+    }
+
+    @Override
+    public Response filter(DemoRequest request, Class<? extends Handler<DemoRequest>> handlerClass, FilterChain<DemoRequest> demoRequestFilterChain) {
       final String newBCookieValue = request.getNewBCookieValue();
+      Response response = demoRequestFilterChain.doFilter(request);
       if (newBCookieValue != null) {
         response.addHeaderOp(new SetCookieHeaderOp(B_COOKIE_NAME, newBCookieValue, B_COOKIE_MAX_AGE));
       }
+      return response;
     }
   }
 

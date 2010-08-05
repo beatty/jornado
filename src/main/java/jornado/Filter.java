@@ -6,6 +6,8 @@ package jornado;
  * @author john
  */
 public interface Filter<R extends Request> {
-  public Response before(R request, Class<? extends Handler<R>> handlerClass);
-  public void after(R request, Response response, Class<? extends Handler<R>> handlerClass);
+  public interface FilterChain<R extends Request> {
+    Response doFilter(R request);
+  }
+  public Response filter(R request, Class<? extends Handler<R>> handlerClass, FilterChain<R> filterChain);
 }

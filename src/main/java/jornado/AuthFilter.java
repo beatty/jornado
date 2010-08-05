@@ -20,11 +20,11 @@ public class AuthFilter<R extends Request> extends BaseFilter<R> {
   }
 
   @Override
-  public Response before(R request, Class<? extends Handler<R>> handlerClass) {
+  public Response filter(R request, Class<? extends Handler<R>> handlerClass, FilterChain<R> rFilterChain) {
     if (handlerClass.getAnnotation(RequiresLogin.class) != null && !request.isLoggedIn()) {
       return new RedirectResponse(loginUrl + "?target=" + request.getReconstructedUrl());
     } else {
-      return null;
+      return rFilterChain.doFilter(request);
     }
   }
 }
