@@ -37,9 +37,17 @@ public class SecureCookieService {
    * @return the cookie string
    */
   public String create(String value) {
-    final byte[] valueBytes = utf8Bytes(value);
+    return create(utf8Bytes(value));
+  }
+
+  /**
+   * Creates a tamper-proof, timestamped cookie with the specified value.
+   * @param value A string. Any string is allowed -- the value will be UTF-8 encoded in the cookie.
+   * @return the cookie string
+   */
+  public String create(byte[] value) {
     final byte[] timestampBytes = currentTimeBytes();
-    return Joiner.on('|').join(str(b64(valueBytes)), str(timestampBytes), str(b64(sign(valueBytes, timestampBytes))));
+    return Joiner.on('|').join(str(b64(value)), str(timestampBytes), str(b64(sign(value, timestampBytes))));
   }
 
   /**
@@ -52,7 +60,7 @@ public class SecureCookieService {
    * @throws FailedSignatureValidationException if the cookie failed signature validation. Note that the application should
    * occasionally expect this when keys are rotated.
    */
-  public String extract(String cookie, int timeoutSeconds) {
+  public byte[] extractBytes(String cookie, int timeoutSeconds) {
     final String[] parts = cookie.split("\\|");
 
     if (parts.length != 3) {
@@ -67,13 +75,27 @@ public class SecureCookieService {
     if ((System.currentTimeMillis()/1000 - ts) < timeoutSeconds) {
       final byte[] actualSignature = sign(givenValue, givenTimestamp);
       if (Arrays.equals(actualSignature, givenSignature)) {
-        return utf8String(givenValue);
+        return givenValue;
       } else {
         throw new FailedSignatureValidationException();
       }
     } else {
       throw new SecureCookieTimeoutException();
     }
+  }
+
+  /**
+   * Extracts the value of the cookie.
+   *
+   * @param cookie The cookie string
+   * @param timeoutSeconds The maximum allowable age of the cookie, specified in seconds.
+   * @return the original value
+   * @throws SecureCookieTimeoutException if the cookie timestamp is older then than specified timeout value.
+   * @throws FailedSignatureValidationException if the cookie failed signature validation. Note that the application should
+   * occasionally expect this when keys are rotated.
+   */
+  public String extract(String cookie, int timeoutSeconds) {
+    return utf8String(extractBytes(cookie, timeoutSeconds));
   }
 
   private static byte[] b64(byte[] value) {
