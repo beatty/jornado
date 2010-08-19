@@ -23,6 +23,7 @@ public class Base62 {
   }
 
   public static int decode(String base62String) {
+    Preconditions.checkNotNull(base62String);
     char[] chars = base62String.toCharArray();
     int value = 0;
     int multiplier = 1;

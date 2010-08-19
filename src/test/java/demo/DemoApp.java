@@ -223,5 +223,10 @@ public class DemoApp {
       // pretend we have a database
       return new DemoUser(id);
     }
+
+    @Override
+    public DemoUser create(Request request) {
+      return new DemoUser("xyz");
+    }
   }
 }

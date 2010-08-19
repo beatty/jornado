@@ -23,11 +23,13 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   private final HttpServletRequest servletRequest;
   private final UserService<U> userService;
   private final SecureCookieService secureCookieService;
-  private RouteHandlerData routeHandlerData;
-  private CachedObjectHolder<U> cachedUser;
+  private RouteHandlerData routeHandlerData; // note this is not going to be changed after the initial setup
   private final String requestId = generateId();
 
+  // mutable state -- needs concurrency control
   private AtomicBoolean loginCookieInvalid = new AtomicBoolean(false);
+  private CachedObjectHolder<U> cachedUser;
+  private String loginCookieNewValue = null;
 
   public ServletBackedRequest(HttpServletRequest servletRequest, UserService<U> userService, SecureCookieService secureCookieService) {
     this.servletRequest = servletRequest;
@@ -39,6 +41,10 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
     byte[] bytes = new byte[8];
     rnd.nextBytes(bytes);
     return HexUtil.toHexString(bytes);
+  }
+
+  public String getLoginCookieNewValue() {
+    return loginCookieNewValue;
   }
 
   public String getRequestId() {
@@ -90,8 +96,9 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   }
 
   @Override
-  public int getBase62Parameter(String name) {
-    return Base62.decode(getParameter(name));
+  public int getBase62PathParameter(String name) {
+    final String value = getPathParameter(name);
+    return value != null ? Base62.decode(value) : null;
   }
 
   public String getParameter(String name) {
@@ -167,35 +174,64 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
 
   public U getUser() {
     if (cachedUser == null) {
-      String loginCookie = getCookieValue(Constants.LOGIN_COOKIE);
-      U user = null;
-      if (loginCookie != null) {
-        try {
-          final String userId = secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
-          user = userService.load(userId);
-          if (user == null) {
-            loginCookieInvalid.set(true);
-          }
-        } catch (InvalidSecureCookieFormatException e) {
-          loginCookieInvalid.set(true);
-        } catch (FailedSignatureValidationException e) {
-          loginCookieInvalid.set(true);
-        }
-      } else {
-        user = null;
-      }
+      U user = rawGetUser();
       cachedUser = new CachedObjectHolder<U>(user);
     }
     return cachedUser.get();
+  }
+
+  private U rawGetUser() {
+    String loginCookie = getCookieValue(Constants.LOGIN_COOKIE);
+    U user = null;
+    if (loginCookie != null) {
+      try {
+        final String userId = secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
+        user = userService.load(userId);
+        if (user == null) {
+          loginCookieInvalid.set(true);
+        }
+      } catch (InvalidSecureCookieFormatException e) {
+        loginCookieInvalid.set(true);
+      } catch (FailedSignatureValidationException e) {
+        loginCookieInvalid.set(true);
+      }
+    } else {
+      user = null;
+    }
+    return user;
+  }
+
+  public U getUser(boolean create) {
+    if (cachedUser != null) return cachedUser.get();
+    U user = rawGetUser();
+    if (user == null) {
+      user = userService.create(this);
+      if (user != null) {
+        loginCookieNewValue = user.getWebId();
+      }
+      cachedUser = new CachedObjectHolder<U>(user);
+    }
+    return user;
   }
 
   public String getReferer() {
     return getHeader("Referer");
   }
 
-  // TODO: lighter-weight implementation needed?
   public boolean isLoggedIn() {
-    return getUser() != null;
+    // otherwise test that an l cookie exists and that it is valid
+    boolean validLCookie = false;
+    String loginCookie = getCookieValue(Constants.LOGIN_COOKIE);
+    if (loginCookie != null) {
+      try {
+        secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
+        validLCookie = true;
+      } catch (InvalidSecureCookieFormatException e) {
+      } catch (FailedSignatureValidationException e) {
+      }
+    }
+
+    return validLCookie;
   }
 
   public String getXsrfCookie() {

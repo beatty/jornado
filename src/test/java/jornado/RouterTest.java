@@ -101,6 +101,11 @@ public class RouterTest {
     }
 
     @Override
+    public int getBase62PathParameter(String name) {
+      return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Long getLongParameter(String name) {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -161,6 +166,11 @@ public class RouterTest {
     }
 
     @Override
+    public WebUser getUser(boolean create) {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public String getReferer() {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -183,6 +193,11 @@ public class RouterTest {
     @Override
     public boolean isLoginCookieInvalid() {
       return false; // TODO
+    }
+
+    @Override
+    public String getLoginCookieNewValue() {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
   }
 }

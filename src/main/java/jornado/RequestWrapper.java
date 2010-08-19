@@ -43,8 +43,8 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
     return delegate.getListParameter(name);
   }
 
-  public int getBase62Parameter(String name) {
-    return delegate.getBase62Parameter(name);
+  public int getBase62PathParameter(String name) {
+    return delegate.getBase62PathParameter(name);
   }
 
   public Long getLongParameter(String name) {
@@ -96,6 +96,11 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
     return delegate.getUser();
   }
 
+  @Override
+  public U getUser(boolean create) {
+    return delegate.getUser(create);
+  }
+
   public String getReferer() {
     return delegate.getReferer();
   }
@@ -115,5 +120,10 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
   @Override
   public boolean isLoginCookieInvalid() {
     return delegate.isLoginCookieInvalid();
+  }
+
+  @Override
+  public String getLoginCookieNewValue() {
+    return delegate.getLoginCookieNewValue();
   }
 }
