@@ -20,6 +20,7 @@ public interface Request<U extends WebUser> {
     String getCookieValue(String name);
     String getHeader(String name);
     Collection<String> getListParameter(String name);
+    int getBase62Parameter(String name);
     Long getLongParameter(String name);
     long getLongParameter(String name, long defaultValue);
     String getParameter(String name);

@@ -43,6 +43,10 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
     return delegate.getListParameter(name);
   }
 
+  public int getBase62Parameter(String name) {
+    return delegate.getBase62Parameter(name);
+  }
+
   public Long getLongParameter(String name) {
     return delegate.getLongParameter(name);
   }

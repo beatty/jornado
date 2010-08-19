@@ -89,6 +89,11 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
     return values != null ? Arrays.asList(values) : Collections.<String>emptyList();
   }
 
+  @Override
+  public int getBase62Parameter(String name) {
+    return Base62.decode(getParameter(name));
+  }
+
   public String getParameter(String name) {
     return servletRequest.getParameter(name);
   }
