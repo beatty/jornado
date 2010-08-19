@@ -31,7 +31,7 @@ public class JettyService extends AbstractIdleService {
 
         contexts.addHandler(createRequestLogHandler());
 
-        final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
+        final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", false, false);
         mainHandler.addServlet(new ServletHolder(jornadoServlet), "/");
 
         if (config.isDebug() && config.getStaticDir() != null) {
