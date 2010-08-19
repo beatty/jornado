@@ -10,6 +10,8 @@ import javax.servlet.http.HttpSession;
  *
  * @author john
  */
+import java.util.Collection;
+
 import static org.junit.Assert.*;
 
 public class RouterTest {
@@ -94,6 +96,11 @@ public class RouterTest {
     }
 
     @Override
+    public Collection<String> getListParameter(String name) {
+      return null;
+    }
+
+    @Override
     public Long getLongParameter(String name) {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -111,6 +118,11 @@ public class RouterTest {
     @Override
     public String getParameter(String name, String defaultValue) {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean hasParameter(String name) {
+      return false; // TODO
     }
 
     @Override

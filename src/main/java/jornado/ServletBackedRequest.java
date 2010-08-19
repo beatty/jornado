@@ -3,6 +3,9 @@ package jornado;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -80,6 +83,12 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
     return servletRequest.getHeader(name);
   }
 
+  @Override
+  public Collection<String> getListParameter(String name) {
+    final String[] values = servletRequest.getParameterValues(name);
+    return values != null ? Arrays.asList(values) : Collections.<String>emptyList();
+  }
+
   public String getParameter(String name) {
     return servletRequest.getParameter(name);
   }
@@ -91,6 +100,12 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
     } else {
       return defaultValue;
     }
+  }
+
+  @Override
+  public boolean hasParameter(String name) {
+    final String param = getParameter(name);
+    return param != null && !param.trim().equals("");
   }
 
   public boolean isParameterSet(String name) {

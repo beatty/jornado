@@ -2,6 +2,7 @@ package jornado;
 
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
@@ -13,7 +14,7 @@ import java.util.List;
  * A guice module that contains the configuration for jornado
  */
 public abstract class JornadoModule<R extends Request> extends AbstractModule {
-  private final Config config;
+  protected final Config config;
   private final Iterable<RouteHandler<R>> routes;
 
   protected JornadoModule(final Config config, Iterable<RouteHandler<R>> routes) {
@@ -36,7 +37,7 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
   }
 
   @Override
-  protected void configure() {
+  protected void configure() {    
     bind(Config.class).toInstance(config);
     bindIterable("routes", routes);
 

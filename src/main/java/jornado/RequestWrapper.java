@@ -2,6 +2,7 @@ package jornado;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import java.util.Collection;
 
 /**
  * Request wrapper to allow applications to easily create their own request classes
@@ -38,6 +39,10 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
     return delegate.getHeader(name);
   }
 
+  public Collection<String> getListParameter(String name) {
+    return delegate.getListParameter(name);
+  }
+
   public Long getLongParameter(String name) {
     return delegate.getLongParameter(name);
   }
@@ -52,6 +57,11 @@ public class RequestWrapper<U extends WebUser> implements Request<U> {
 
   public String getParameter(String name, String defaultValue) {
     return delegate.getParameter(name, defaultValue);
+  }
+
+  @Override
+  public boolean hasParameter(String name) {
+    return delegate.hasParameter(name);
   }
 
   public boolean isParameterSet(String name) {

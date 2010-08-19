@@ -2,6 +2,7 @@ package jornado;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -17,6 +18,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 /**
  * The jetty-based web server wrapped up in a guava service
  */
+@Singleton
 public class JettyService extends AbstractIdleService {
     private final Server server;
 

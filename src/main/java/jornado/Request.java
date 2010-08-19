@@ -2,6 +2,7 @@ package jornado;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import java.util.Collection;
 
 /**
  * The request. Subset/superset of HttpServletRequest with crap removed and some extra features, like
@@ -18,10 +19,12 @@ public interface Request<U extends WebUser> {
     Cookie getCookie(String name);
     String getCookieValue(String name);
     String getHeader(String name);
+    Collection<String> getListParameter(String name);
     Long getLongParameter(String name);
     long getLongParameter(String name, long defaultValue);
     String getParameter(String name);
     String getParameter(String name, String defaultValue);
+    boolean hasParameter(String name);
     boolean isParameterSet(String name);
     Integer getIntParameter(String name);
     int getIntParameter(String name, int defaultValue);
