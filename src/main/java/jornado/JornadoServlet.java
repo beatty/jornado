@@ -46,7 +46,7 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   @Override
   protected void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
     httpServletResponse.setHeader("Server", "Jornado+Jetty");
-    RequestProfile.clear();
+    //RequestProfile.clear();
 
     final ServletBackedRequest<U> servletBackedRequest = new ServletBackedRequest<U>(httpServletRequest, userService, secureCookieService);
     final R request = requestFactory.createRequest(servletBackedRequest);
@@ -74,12 +74,12 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
 
       sendResponse(httpServletResponse, request, chain.doFilter(request));
 
-      if (config.isDebug()) {
+      /*if (config.isDebug()) {
         RequestProfile.finish();
         PrintWriter writer = new PrintWriter(System.out);
         RequestProfile.render(writer);
         writer.flush();
-      }
+      }*/
     } else {
       // TODO: support app-defined pages
       httpServletResponse.sendError(404);

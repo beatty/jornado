@@ -36,10 +36,18 @@ public abstract class JornadoModule<R extends Request> extends AbstractModule {
     return Collections.emptyList();
   }
 
+  public Iterable<RouteHandler<R>> getRoutes() {
+    return routes;
+  }
+
   @Override
   protected void configure() {    
     bind(Config.class).toInstance(config);
     bindIterable("routes", routes);
+
+    for (RouteHandler<R> route : routes) {
+      bind(route.getHandlerClass());
+    }
 
     bindLiteral("cookieKey", config.getCookieKey());
     bindLiteral("loginUrl", config.getLoginUrl());
