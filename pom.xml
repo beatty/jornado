@@ -64,7 +64,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>r04</version>
+      <version>r07</version>
     </dependency>
 
     <!-- Guice -->
