@@ -13,7 +13,7 @@ public class SetUserCookieHeaderOp implements HeaderOp {
     public void execute(HttpServletResponse response) {
         final Cookie cookie = new Cookie(Constants.LOGIN_COOKIE, userId);
         cookie.setPath("/");
-        // TODO: expires, domain, etc.
+        cookie.setMaxAge(60 * 60 * 24 * 90); // 90 days
         response.addCookie(cookie);
     }
 }
