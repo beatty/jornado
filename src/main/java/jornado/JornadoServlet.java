@@ -46,7 +46,6 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   @Override
   protected void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
     httpServletResponse.setHeader("Server", "Jornado+Jetty");
-    //RequestProfile.clear();
 
     final ServletBackedRequest<U> servletBackedRequest = new ServletBackedRequest<U>(httpServletRequest, userService, secureCookieService);
     final R request = requestFactory.createRequest(servletBackedRequest);
@@ -73,13 +72,6 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
       };
 
       sendResponse(httpServletResponse, request, chain.doFilter(request));
-
-      /*if (config.isDebug()) {
-        RequestProfile.finish();
-        PrintWriter writer = new PrintWriter(System.out);
-        RequestProfile.render(writer);
-        writer.flush();
-      }*/
     } else {
       // TODO: support app-defined pages
       httpServletResponse.sendError(404);
@@ -87,31 +79,35 @@ public class JornadoServlet<R extends Request<U>, U extends WebUser> extends Htt
   }
 
   private void sendResponse(HttpServletResponse servletResponse, R request, Response response) throws IOException {
-    final int statusCode = response.getStatus().getCode();
-    final String reasonPhrase = response.getStatus().getReasonPhrase();
-    if (reasonPhrase == null) {
-      servletResponse.setStatus(statusCode);
-    } else {
-      servletResponse.sendError(statusCode, reasonPhrase);
-    }
-
-    for (HeaderOp op : response.getHeaderOps()) {
-      op.execute(servletResponse);
-    }
-
-    if (request.isLoginCookieInvalid()) {
-      final Cookie cookie = request.getCookie(Constants.LOGIN_COOKIE);
-      if (cookie != null) {
-        cookie.setMaxAge(0);
-        servletResponse.addCookie(cookie);
+    if (response != null) {
+      final int statusCode = response.getStatus().getCode();
+      final String reasonPhrase = response.getStatus().getReasonPhrase();
+      if (reasonPhrase == null) {
+        servletResponse.setStatus(statusCode);
+      } else {
+        servletResponse.sendError(statusCode, reasonPhrase);
       }
-    }
 
-    final Body body = response.getBody();
-    if (body != null) {
-      RenderService renderService = injector.getInstance(body.getRenderServiceClass());
-      servletResponse.setContentType(body.getMediaType().toString());
-      renderService.write(servletResponse.getWriter(), body);
+      for (HeaderOp op : response.getHeaderOps()) {
+        op.execute(servletResponse);
+      }
+
+      if (request.isLoginCookieInvalid()) {
+        final Cookie cookie = request.getCookie(Constants.LOGIN_COOKIE);
+        if (cookie != null) {
+          cookie.setMaxAge(0);
+          servletResponse.addCookie(cookie);
+        }
+      }
+
+      final Body body = response.getBody();
+      if (body != null) {
+        RenderService renderService = injector.getInstance(body.getRenderServiceClass());
+        servletResponse.setContentType(body.getMediaType().toString());
+        renderService.write(servletResponse.getWriter(), body);
+      }
+    } else {
+      servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "missing response");
     }
   }
 }

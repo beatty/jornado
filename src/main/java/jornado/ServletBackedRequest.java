@@ -219,21 +219,7 @@ public class ServletBackedRequest<U extends WebUser> implements Request<U> {
   }
 
   public boolean isLoggedIn() {
-    if (loginCookieInvalid.get()) return false;
-
-    // otherwise test that an l cookie exists and that it is valid
-    boolean validLCookie = false;
-    String loginCookie = getCookieValue(Constants.LOGIN_COOKIE);
-    if (loginCookie != null) {
-      try {
-        secureCookieService.extract(loginCookie, TIMEOUT_31_DAYS);
-        validLCookie = true;
-      } catch (InvalidSecureCookieFormatException e) {
-      } catch (FailedSignatureValidationException e) {
-      }
-    }
-
-    return validLCookie;
+    return (getUser() != null);
   }
 
   public String getXsrfCookie() {

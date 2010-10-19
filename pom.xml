@@ -57,7 +57,7 @@
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.5.2</version>
+      <version>1.6.0</version>
     </dependency>
 
     <!-- Gauva -->

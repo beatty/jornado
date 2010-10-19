@@ -3,6 +3,7 @@ package jornado;
 public class Status {
     public static final Status OK = new Status(200);
     public static final Status CODE_302 = new Status(302);
+    public static final Status CODE_400 = new Status(400);
     public static final Status CODE_404 = new Status(404);
     public static final Status CODE_503 = new Status(503);
     
